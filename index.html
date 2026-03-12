@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>QuickAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#05060f;--surface:#0d0e1e;--card:#11122a;--border:#1e2040;
+  --a1:#7c5cfc;--a2:#00e5ff;--a3:#ff3cac;
+  --text:#e8eaf6;--muted:#7b80a8;
+  --g1:rgba(124,92,252,.35);--g2:rgba(0,229,255,.25);--g3:rgba(255,60,172,.25);
+  --r:16px;--fh:'Syne',sans-serif;--fb:'DM Sans',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);overflow-x:hidden;cursor:none}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--a1);border-radius:99px}
+
+/* ── CUSTOM CURSOR ── */
+#c-ring{position:fixed;width:38px;height:38px;border:2px solid rgba(124,92,252,.7);border-radius:50%;
+  pointer-events:none;z-index:99999;transform:translate(-50%,-50%);
+  transition:width .18s,height .18s,border-color .2s,background .2s,opacity .2s;mix-blend-mode:screen}
+#c-dot{position:fixed;width:7px;height:7px;background:var(--a1);border-radius:50%;
+  pointer-events:none;z-index:100000;transform:translate(-50%,-50%);
+  box-shadow:0 0 12px var(--a1);transition:background .3s,box-shadow .3s}
+#c-trail{position:fixed;inset:0;pointer-events:none;z-index:99998}
+
+/* ── NOISE + ORBS ── */
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");opacity:.45}
+.orb{position:fixed;border-radius:50%;filter:blur(100px);z-index:0;pointer-events:none;animation:orbFloat 9s ease-in-out infinite alternate}
+.o1{width:550px;height:550px;background:var(--g1);top:-120px;left:-120px;animation-delay:0s}
+.o2{width:420px;height:420px;background:var(--g2);bottom:-100px;right:-100px;animation-delay:-4s}
+.o3{width:320px;height:320px;background:var(--g3);top:40%;left:42%;animation-delay:-7s}
+@keyframes orbFloat{from{transform:translate(0,0) scale(1)}to{transform:translate(35px,25px) scale(1.1)}}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;
+  padding:1.1rem 2.5rem;background:rgba(13,14,30,.8);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border)}
+.logo{font-family:var(--fh);font-size:1.5rem;font-weight:800;
+  background:linear-gradient(135deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo span{-webkit-text-fill-color:var(--a3)}
+.nav-links{display:flex;gap:2rem}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.9rem;font-weight:500;transition:color .2s}
+.nav-links a:hover{color:var(--a2)}
+.nav-cta{background:linear-gradient(135deg,var(--a1),#5b3de8);color:#fff;padding:.5rem 1.5rem;
+  border-radius:99px;font-weight:600;font-size:.9rem;text-decoration:none;
+  box-shadow:0 0 20px var(--g1);transition:transform .2s,box-shadow .2s}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 0 36px var(--g1)}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:7rem 1.5rem 5rem;position:relative;z-index:1;
+  animation:fadeUp .9s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.badge{display:inline-flex;align-items:center;gap:.5rem;border:1px solid var(--border);
+  border-radius:99px;padding:.35rem 1rem;font-size:.78rem;color:var(--muted);margin-bottom:2rem;
+  background:rgba(255,255,255,.03)}
+.badge-dot{width:8px;height:8px;border-radius:50%;background:var(--a2);box-shadow:0 0 8px var(--a2);
+  animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.6}}
+.hero h1{font-family:var(--fh);font-size:clamp(2.8rem,7vw,5rem);font-weight:800;
+  line-height:1.08;letter-spacing:-.04em;margin-bottom:1.5rem}
+.hero h1 span{background:linear-gradient(135deg,var(--a1) 20%,var(--a2) 60%,var(--a3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-size:200% 200%;animation:gradShift 4s ease infinite}
+@keyframes gradShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.hero p{max-width:580px;margin:0 auto 2.5rem;font-size:1.1rem;color:var(--muted);line-height:1.7}
+.hero-ctas{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+.btn-p{background:linear-gradient(135deg,var(--a1),#5b3de8);color:#fff;border:none;
+  padding:.85rem 2.2rem;border-radius:99px;font-size:1rem;font-weight:600;cursor:none;
+  box-shadow:0 0 24px var(--g1);transition:transform .2s,box-shadow .2s;font-family:var(--fb)}
+.btn-p:hover{transform:translateY(-3px);box-shadow:0 0 42px var(--g1)}
+.btn-g{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--border);
+  padding:.85rem 2.2rem;border-radius:99px;font-size:1rem;font-weight:500;cursor:none;
+  transition:background .2s,border-color .2s;font-family:var(--fb)}
+.btn-g:hover{background:rgba(255,255,255,.1);border-color:var(--a1)}
+
+/* ── STATS ── */
+.wrap{max-width:1140px;margin:0 auto;padding:0 1.5rem;position:relative;z-index:1}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;padding:3rem 0 5rem}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:1.5rem;text-align:center;transition:border-color .2s,transform .2s}
+.stat:hover{border-color:var(--a1);transform:translateY(-5px)}
+.stat-n{font-family:var(--fh);font-size:2.2rem;font-weight:800;
+  background:linear-gradient(135deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-l{font-size:.85rem;color:var(--muted);margin-top:.3rem}
+
+/* ── SECTION ── */
+.sec{padding:5rem 0}
+.sec-tag{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--a2);margin-bottom:.75rem}
+.sec h2{font-family:var(--fh);font-size:clamp(2rem,4vw,3rem);font-weight:800;
+  letter-spacing:-.03em;line-height:1.12;margin-bottom:1rem}
+.sec p.lead{color:var(--muted);font-size:1.1rem;max-width:560px;line-height:1.7}
+
+/* ── FEATURES ── */
+.feats{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem}
+.feat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:2rem;
+  position:relative;overflow:hidden;transition:border-color .25s,transform .25s}
+.feat::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 40% at 50% 0%,var(--gv,transparent),transparent);
+  opacity:0;transition:opacity .3s}
+.feat:hover{border-color:var(--a1);transform:translateY(-6px)}
+.feat:hover::before{opacity:1}
+.feat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;font-size:1.5rem;margin-bottom:1.2rem}
+.feat h3{font-family:var(--fh);font-size:1.1rem;font-weight:700;margin-bottom:.6rem}
+.feat p{color:var(--muted);font-size:.9rem;line-height:1.65}
+
+/* ── STEPS ── */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;margin-top:3rem}
+.step{text-align:center}
+.step-n{width:56px;height:56px;background:linear-gradient(135deg,var(--a1),#5b3de8);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--fh);font-size:1.4rem;font-weight:800;margin:0 auto 1rem;
+  box-shadow:0 0 22px var(--g1)}
+.step h4{font-family:var(--fh);font-size:1rem;font-weight:700;margin-bottom:.4rem}
+.step p{color:var(--muted);font-size:.88rem;line-height:1.6}
+
+/* ── PLAYGROUND ── */
+.playground{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:2.5rem;margin-top:2rem}
+.pg-input-row{display:flex;gap:.75rem;margin-bottom:1.5rem}
+.pg-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:.85rem 1.2rem;color:var(--text);font-size:.95rem;font-family:var(--fb);
+  outline:none;transition:border-color .2s}
+.pg-input:focus{border-color:var(--a1)}
+.pg-btn{background:linear-gradient(135deg,var(--a1),#5b3de8);color:#fff;border:none;
+  padding:.85rem 1.8rem;border-radius:12px;font-weight:600;cursor:none;font-family:var(--fb);
+  white-space:nowrap;box-shadow:0 0 20px var(--g1);transition:transform .2s}
+.pg-btn:hover{transform:scale(1.03)}
+.pg-log{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:1.2rem;min-height:120px;font-size:.88rem;line-height:1.8;color:var(--muted);
+  font-family:'Courier New',monospace}
+.pg-log .log-line{opacity:0;transform:translateX(-8px);transition:opacity .3s,transform .3s}
+.pg-log .log-line.show{opacity:1;transform:translateX(0)}
+.log-ok{color:#00ff88}.log-run{color:var(--a2)}.log-done{color:var(--a1)}
+.progress-bar{height:4px;background:var(--border);border-radius:99px;margin-bottom:1rem;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--a1),var(--a2));
+  border-radius:99px;width:0%;transition:width .4s ease;box-shadow:0 0 8px var(--g1)}
+
+/* ── PRICING ── */
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem}
+.plan{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:2.5rem 2rem;position:relative;transition:border-color .25s,transform .25s}
+.plan:hover{transform:translateY(-6px);border-color:var(--a1)}
+.plan.hot{border-color:var(--a1);box-shadow:0 0 45px var(--g1)}
+.plan-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,var(--a1),var(--a3));color:#fff;font-size:.7rem;
+  font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.3rem 1.2rem;
+  border-radius:99px;white-space:nowrap}
+.plan-name{font-size:.9rem;color:var(--muted);font-weight:500;margin-bottom:.5rem}
+.plan-price{font-family:var(--fh);font-size:3rem;font-weight:800;line-height:1;margin-bottom:.5rem}
+.plan-price sup{font-size:1.3rem;vertical-align:super}
+.plan-price sub{font-size:1rem;color:var(--muted)}
+.plan-desc{font-size:.88rem;color:var(--muted);margin-bottom:2rem}
+.plan-feats{list-style:none;padding:0;margin:0 0 2rem}
+.plan-feats li{font-size:.9rem;padding:.55rem 0;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:.5rem}
+.plan-feats li:last-child{border:none}
+.ck{color:var(--a2)}.nx{color:#444}
+
+/* ── TESTIMONIALS ── */
+.testis{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem}
+.testi{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:2rem;
+  transition:border-color .25s,transform .25s}
+.testi:hover{border-color:var(--a2);transform:translateY(-4px)}
+.testi-txt{font-size:.95rem;line-height:1.7;margin-bottom:1.5rem}
+.testi-txt::before{content:'"';font-family:Georgia,serif;font-size:3rem;color:var(--a1);
+  line-height:0;vertical-align:-.6em;margin-right:.1em}
+.testi-author{display:flex;align-items:center;gap:.75rem}
+.avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-weight:700;font-size:.9rem;flex-shrink:0}
+.testi-name{font-weight:600;font-size:.9rem}
+.testi-role{font-size:.78rem;color:var(--muted)}
+
+/* ── CTA BANNER ── */
+.cta-banner{background:linear-gradient(135deg,rgba(124,92,252,.15),rgba(0,229,255,.08));
+  border:1px solid var(--border);border-radius:24px;padding:5rem 2rem;text-align:center;
+  margin:5rem 0;position:relative;overflow:hidden}
+.cta-banner::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 60% at 50% 50%,var(--g1),transparent)}
+
+/* ── CONTACT ── */
+.contact-form{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-top:2rem}
+.contact-form .full{grid-column:1/-1}
+.inp{width:100%;background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:.85rem 1.2rem;color:var(--text);font-size:.9rem;font-family:var(--fb);
+  outline:none;transition:border-color .2s}
+.inp:focus{border-color:var(--a1)}
+textarea.inp{resize:vertical;min-height:110px}
+select.inp option{background:var(--card)}
+.form-submit{background:linear-gradient(135deg,var(--a1),#5b3de8);color:#fff;border:none;
+  padding:.9rem 2.2rem;border-radius:99px;font-size:1rem;font-weight:600;cursor:none;
+  font-family:var(--fb);box-shadow:0 0 22px var(--g1);transition:transform .2s,box-shadow .2s}
+.form-submit:hover{transform:translateY(-2px);box-shadow:0 0 38px var(--g1)}
+.form-msg{margin-top:1rem;padding:.9rem 1.2rem;border-radius:12px;font-size:.9rem;display:none}
+.form-msg.ok{background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);color:#00ff88}
+.form-msg.err{background:rgba(255,60,60,.1);border:1px solid rgba(255,60,60,.3);color:#ff6060}
+
+/* ── FOOTER ── */
+footer{background:var(--surface);border-top:1px solid var(--border);padding:4rem 2.5rem 2rem}
+.foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:3rem}
+.foot-brand{font-family:var(--fh);font-size:1.3rem;font-weight:800;
+  background:linear-gradient(135deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.75rem}
+.foot-tagline{color:var(--muted);font-size:.88rem;line-height:1.6}
+.foot-col h5{font-family:var(--fh);font-size:.95rem;font-weight:700;margin-bottom:1.2rem}
+.foot-col ul{list-style:none;padding:0;margin:0}
+.foot-col ul li{margin-bottom:.75rem}
+.foot-col ul li a{color:var(--muted);text-decoration:none;font-size:.88rem;transition:color .2s}
+.foot-col ul li a:hover{color:var(--a2)}
+.foot-bottom{display:flex;justify-content:space-between;align-items:center;
+  padding-top:2rem;border-top:1px solid var(--border)}
+.foot-bottom p{color:var(--muted);font-size:.82rem}
+
+/* ═══════════════════════════════════════════
+   BOT SYSTEM
+══════════════════════════════════════════ */
+
+/* ── Bot Container ── */
+#bot{position:fixed;bottom:28px;right:28px;z-index:99990;
+  display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+
+/* ── Bot Avatar ── */
+#bot-av{
+  width:68px;height:68px;
+  background:linear-gradient(135deg,var(--a1),var(--a3));
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:30px;cursor:none;position:relative;
+  box-shadow:0 0 0 4px rgba(124,92,252,.3),0 0 40px rgba(124,92,252,.55);
+  animation:botFloat 3.5s ease-in-out infinite;
+  transition:box-shadow .3s;user-select:none
+}
+#bot-av:hover{box-shadow:0 0 0 6px rgba(124,92,252,.55),0 0 65px rgba(124,92,252,.75)!important}
+@keyframes botFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+#bot-av.excited{animation:botExcite .5s ease forwards!important}
+@keyframes botExcite{
+  0%{transform:scale(1) rotate(0)}25%{transform:scale(1.25) rotate(-10deg)}
+  50%{transform:scale(1.25) rotate(10deg)}75%{transform:scale(1.1) rotate(-4deg)}
+  100%{transform:scale(1) rotate(0)}
+}
+#bot-av.thinking{animation:botThink 1s ease-in-out infinite!important}
+@keyframes botThink{0%,100%{transform:scale(1)}50%{transform:scale(.93)}}
+
+/* Bot eyes */
+#bot-eyes{position:absolute;display:flex;gap:7px;top:17px;pointer-events:none}
+.b-eye{width:14px;height:14px;background:#fff;border-radius:50%;position:relative;overflow:hidden}
+.b-pupil{width:7px;height:7px;background:#150a30;border-radius:50%;
+  position:absolute;top:3.5px;left:3.5px;transition:transform .08s ease}
+
+/* Bot pulse ring */
+#bot-av::after{
+  content:'';position:absolute;inset:-8px;border-radius:50%;
+  border:2px solid rgba(124,92,252,.5);
+  animation:botPulse 2.5s ease-in-out infinite
+}
+@keyframes botPulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.12);opacity:.2}}
+
+/* ── Speech Bubble ── */
+#bot-bubble{
+  background:linear-gradient(135deg,#0d0e1e,#151630);
+  border:1px solid rgba(124,92,252,.5);
+  border-radius:18px 18px 4px 18px;
+  padding:12px 16px;max-width:260px;min-width:160px;
+  font-size:13px;line-height:1.55;color:var(--text);
+  box-shadow:0 6px 32px rgba(124,92,252,.3);
+  opacity:0;transform:translateY(8px) scale(.94);
+  transition:opacity .3s,transform .3s;pointer-events:none;
+  position:relative
+}
+#bot-bubble.show{opacity:1;transform:translateY(0) scale(1)}
+#bot-bubble.typing::after{
+  content:'●●●';font-size:10px;color:var(--a1);
+  animation:typingDot 1.2s ease infinite
+}
+@keyframes typingDot{0%,100%{opacity:1}33%{opacity:.2}66%{opacity:.6}}
+
+/* ── Bot Panel (slides up) ── */
+#bot-panel{
+  position:fixed;bottom:110px;right:28px;width:320px;
+  background:linear-gradient(145deg,#0d0e1e,#11122a);
+  border:1px solid rgba(124,92,252,.45);border-radius:20px;
+  box-shadow:0 16px 60px rgba(0,0,0,.6),0 0 40px rgba(124,92,252,.2);
+  z-index:99985;overflow:hidden;
+  opacity:0;transform:translateY(20px) scale(.95);
+  transition:opacity .35s,transform .35s;pointer-events:none
+}
+#bot-panel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.bp-header{
+  background:linear-gradient(135deg,rgba(124,92,252,.2),rgba(255,60,172,.1));
+  border-bottom:1px solid var(--border);padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between
+}
+.bp-title{font-family:var(--fh);font-weight:700;font-size:.95rem;
+  display:flex;align-items:center;gap:.5rem}
+.bp-close{background:none;border:none;color:var(--muted);cursor:none;
+  font-size:1.1rem;transition:color .2s}
+.bp-close:hover{color:var(--text)}
+.bp-tabs{display:flex;border-bottom:1px solid var(--border)}
+.bp-tab{flex:1;padding:.7rem;background:none;border:none;color:var(--muted);
+  font-size:.78rem;font-weight:600;cursor:none;transition:all .2s;
+  letter-spacing:.04em;text-transform:uppercase;font-family:var(--fb)}
+.bp-tab.active{color:var(--a1);border-bottom:2px solid var(--a1)}
+.bp-tab:hover:not(.active){color:var(--text)}
+.bp-content{padding:16px;max-height:320px;overflow-y:auto}
+
+/* Chat tab */
+.chat-msgs{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;min-height:140px}
+.chat-msg{max-width:85%;padding:9px 13px;border-radius:14px;font-size:.85rem;line-height:1.5}
+.chat-msg.bot{background:rgba(124,92,252,.15);border:1px solid rgba(124,92,252,.25);
+  align-self:flex-start;border-radius:4px 14px 14px 14px}
+.chat-msg.user{background:linear-gradient(135deg,var(--a1),#5b3de8);color:#fff;
+  align-self:flex-end;border-radius:14px 14px 4px 14px}
+.chat-input-row{display:flex;gap:.5rem}
+.chat-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:.6rem .9rem;color:var(--text);font-size:.85rem;font-family:var(--fb);outline:none;
+  transition:border-color .2s}
+.chat-input:focus{border-color:var(--a1)}
+.chat-send{background:linear-gradient(135deg,var(--a1),#5b3de8);color:#fff;border:none;
+  padding:.6rem 1rem;border-radius:10px;cursor:none;font-size:.85rem;font-weight:600;
+  transition:transform .2s}
+.chat-send:hover{transform:scale(1.05)}
+
+/* Tasks tab */
+.task-list{display:flex;flex-direction:column;gap:.5rem}
+.task-item{display:flex;align-items:center;gap:.75rem;padding:.7rem .9rem;
+  background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;
+  font-size:.85rem;cursor:none;transition:border-color .2s,background .2s}
+.task-item:hover{border-color:var(--a1);background:rgba(124,92,252,.08)}
+.task-icon{font-size:1.1rem}
+.task-info{flex:1}
+.task-name{font-weight:500;margin-bottom:2px}
+.task-desc{font-size:.75rem;color:var(--muted)}
+.task-run{background:rgba(124,92,252,.2);border:1px solid rgba(124,92,252,.35);color:var(--a1);
+  border-radius:8px;padding:.3rem .7rem;font-size:.75rem;font-weight:600;cursor:none;
+  transition:background .2s}
+.task-run:hover{background:rgba(124,92,252,.4)}
+
+/* Stats tab */
+.mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.mini-stat{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;
+  padding:.8rem;text-align:center}
+.mini-stat-n{font-family:var(--fh);font-size:1.4rem;font-weight:800;
+  background:linear-gradient(135deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.mini-stat-l{font-size:.72rem;color:var(--muted);margin-top:2px}
+.activity-bar{display:flex;align-items:flex-end;gap:3px;height:50px;margin-top:1rem}
+.ab{background:linear-gradient(to top,var(--a1),var(--a2));border-radius:3px 3px 0 0;
+  flex:1;min-width:0;opacity:.7;transition:opacity .2s}
+.ab:hover{opacity:1}
+
+/* ── Radial Menu ── */
+#rad-menu{position:fixed;pointer-events:none;z-index:99980;opacity:0;transition:opacity .22s}
+#rad-menu.open{opacity:1;pointer-events:auto}
+.rad-ring{position:relative;width:220px;height:220px;transform:translate(-50%,-50%)}
+.rad-center{position:absolute;top:50%;left:50%;width:52px;height:52px;
+  background:linear-gradient(135deg,var(--a1),var(--a3));border-radius:50%;
+  transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;
+  font-size:20px;cursor:none;z-index:1;box-shadow:0 0 28px var(--g1);color:#fff;font-weight:700}
+.rad-item{position:absolute;width:56px;height:56px;
+  background:linear-gradient(135deg,#11122a,#1a1b3a);
+  border:1px solid rgba(124,92,252,.55);border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  cursor:none;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);
+  transition:transform .32s cubic-bezier(.34,1.56,.64,1),background .2s;
+  box-shadow:0 4px 20px rgba(0,0,0,.45)}
+#rad-menu.open .rad-item{transform:translate(-50%,-50%) scale(1)}
+.rad-item:hover{background:rgba(124,92,252,.25);border-color:var(--a1)}
+.rad-item .ri{font-size:18px}.rad-item .rl{font-size:7px;color:#a8aac8;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase}
+
+/* ── Toast ── */
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-20px);
+  background:linear-gradient(135deg,#11122a,#1a1b3a);
+  border:1px solid rgba(124,92,252,.5);border-radius:14px;
+  padding:12px 22px;color:var(--text);font-size:13px;z-index:1000001;
+  opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;
+  white-space:nowrap;box-shadow:0 4px 28px rgba(124,92,252,.35)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── Ripple / Particles / Sparkles ── */
+.ripple{position:fixed;border-radius:50%;background:rgba(124,92,252,.28);
+  pointer-events:none;z-index:99970;transform:translate(-50%,-50%) scale(0);
+  animation:rippleA .65s ease-out forwards}
+@keyframes rippleA{to{transform:translate(-50%,-50%) scale(5);opacity:0}}
+.ptc{position:fixed;border-radius:50%;pointer-events:none;z-index:99960;
+  animation:ptcA .9s ease-out forwards}
+@keyframes ptcA{to{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}}
+.spk{position:fixed;pointer-events:none;z-index:99955;font-size:15px;
+  animation:spkA 1.1s ease-out forwards}
+@keyframes spkA{0%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0)}
+  100%{opacity:0;transform:translate(-50%,calc(-50% - 50px)) scale(.2) rotate(210deg)}}
+
+/* ── Cursor hover glow on interactive elements ── */
+a,button,.btn-p,.btn-g,.plan,.feat,.stat,.task-item{cursor:none!important}
+
+/* ── Scroll reveal ── */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  nav{padding:1rem 1.2rem}
+  .nav-links{display:none}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .feats,.plans,.testis{grid-template-columns:1fr}
+  .steps{grid-template-columns:repeat(2,1fr)}
+  .foot-grid{grid-template-columns:1fr 1fr;gap:2rem}
+  .foot-bottom{flex-direction:column;gap:1rem;text-align:center}
+  .contact-form{grid-template-columns:1fr}
+  #bot-panel{width:290px;right:16px}
+  #bot{right:16px;bottom:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- Orbs -->
+<div class="orb o1"></div>
+<div class="orb o2"></div>
+<div class="orb o3"></div>
+
+<!-- Custom Cursor -->
+<canvas id="c-trail"></canvas>
+<div id="c-ring"></div>
+<div id="c-dot"></div>
+
+<!-- ══════════ NAV ══════════ -->
+<nav>
+  <div class="logo">Quick<span>AI</span></div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How It Works</a>
+    <a href="#demo">Demo</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#contact">Contact</a>
+  </div>
+  <a class="nav-cta" href="#contact">Get Early Access ↗</a>
+</nav>
+
+<!-- ══════════ HERO ══════════ -->
+<div class="wrap">
+  <div class="hero">
+    <div class="badge"><div class="badge-dot"></div> Powered by GPT-5 & Claude 3 Opus</div>
+    <h1>The AI Agent That<br><span>Thinks Ahead of You</span></h1>
+    <p>QuickAI is the autonomous AI agent built for gaming, creative studios, and enterprise — executing complex multi-step tasks in seconds, not hours.</p>
+    <div class="hero-ctas">
+      <button class="btn-p" onclick="showToast('🚀 Redirecting to signup...')">Start Free Trial →</button>
+      <button class="btn-g" onclick="showToast('▶ Demo video loading...')">▶ Watch Demo</button>
+    </div>
+  </div>
+  <div class="stats reveal">
+    <div class="stat"><div class="stat-n" data-count="40">0</div><div class="stat-l">Times faster than manual workflows</div></div>
+    <div class="stat"><div class="stat-n" data-count="99">0</div><div class="stat-l">% task success rate</div></div>
+    <div class="stat"><div class="stat-n" data-count="2400000">0</div><div class="stat-l">Tasks completed this month</div></div>
+    <div class="stat"><div class="stat-n">$0</div><div class="stat-l">Cost to get started</div></div>
+  </div>
+</div>
+
+<!-- ══════════ FEATURES ══════════ -->
+<div class="wrap" id="features">
+  <div class="sec reveal">
+    <span class="sec-tag">Core Features</span>
+    <h2>Everything You Need to<br>Build Faster</h2>
+    <p class="lead">QuickAI ships with every primitive a modern team needs.</p>
+    <div class="feats">
+      <div class="feat" style="--gv:rgba(124,92,252,.2)">
+        <div class="feat-icon" style="background:rgba(124,92,252,.15)">🧠</div>
+        <h3>Autonomous Reasoning</h3><p>Breaks down ambiguous goals into atomic sub-tasks, iterates, and self-corrects — no hand-holding required.</p>
+      </div>
+      <div class="feat" style="--gv:rgba(0,229,255,.15)">
+        <div class="feat-icon" style="background:rgba(0,229,255,.12)">⚡</div>
+        <h3>Real-Time Execution</h3><p>Sub-second latency on every action. Whether querying a DB or drafting a campaign, it's instant.</p>
+      </div>
+      <div class="feat" style="--gv:rgba(255,60,172,.15)">
+        <div class="feat-icon" style="background:rgba(255,60,172,.12)">🎮</div>
+        <h3>Gaming-Native</h3><p>Deep hooks into Unity, Unreal, Roblox, and Discord. Run NPC logic and live events at scale.</p>
+      </div>
+      <div class="feat" style="--gv:rgba(124,92,252,.2)">
+        <div class="feat-icon" style="background:rgba(124,92,252,.15)">🔗</div>
+        <h3>100+ Integrations</h3><p>Connect to Slack, Notion, GitHub, Jira, Figma, and more. QuickAI is the glue between every tool.</p>
+      </div>
+      <div class="feat" style="--gv:rgba(0,229,255,.15)">
+        <div class="feat-icon" style="background:rgba(0,229,255,.12)">🛡️</div>
+        <h3>Enterprise Security</h3><p>SOC-2 Type II. Data never leaves your VPC. Fine-grained RBAC, audit logs, zero-retention mode.</p>
+      </div>
+      <div class="feat" style="--gv:rgba(255,60,172,.15)">
+        <div class="feat-icon" style="background:rgba(255,60,172,.12)">📊</div>
+        <h3>Analytics Dashboard</h3><p>Track every task, monitor costs, and optimize prompts with our built-in observability layer.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ HOW IT WORKS ══════════ -->
+<div class="wrap" id="how">
+  <div class="sec reveal">
+    <span class="sec-tag">How It Works</span>
+    <h2>From Goal to Done in Minutes</h2>
+    <div class="steps">
+      <div class="step"><div class="step-n">1</div><h4>Define Your Goal</h4><p>Type a natural-language objective — as broad or specific as you need.</p></div>
+      <div class="step"><div class="step-n">2</div><h4>Agent Plans</h4><p>QuickAI decomposes your goal into an execution plan and selects the right tools.</p></div>
+      <div class="step"><div class="step-n">3</div><h4>Execute & Iterate</h4><p>The agent runs each step, handles errors autonomously, and asks only when truly stuck.</p></div>
+      <div class="step"><div class="step-n">4</div><h4>Review & Deploy</h4><p>Inspect the trace, approve the result, and deploy outputs directly to your stack.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ DEMO ══════════ -->
+<div class="wrap" id="demo">
+  <div class="sec reveal">
+    <span class="sec-tag">Live Playground</span>
+    <h2>Try QuickAI Right Now</h2>
+    <p class="lead">Enter any task and watch the agent simulate a real execution trace.</p>
+    <div class="playground">
+      <div class="progress-bar"><div class="progress-fill" id="pg-bar"></div></div>
+      <div class="pg-input-row">
+        <input class="pg-input" id="pg-inp" placeholder="e.g. Summarise last week's Slack threads and create a Notion page..." onkeydown="if(event.key==='Enter')runDemo()"/>
+        <button class="pg-btn" onclick="runDemo()">⚡ Run Agent</button>
+      </div>
+      <div class="pg-log" id="pg-log">
+        <span style="color:var(--muted)">// Agent output will appear here...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PRICING ══════════ -->
+<div class="wrap" id="pricing">
+  <div class="sec reveal">
+    <span class="sec-tag">Pricing</span>
+    <h2>Simple, Transparent Pricing</h2>
+    <div class="plans">
+      <div class="plan">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price"><sup>$</sup>0<sub>/mo</sub></div>
+        <div class="plan-desc">Perfect for solo builders & indie devs</div>
+        <ul class="plan-feats">
+          <li><span class="ck">✓</span> 500 tasks / month</li>
+          <li><span class="ck">✓</span> 5 integrations</li>
+          <li><span class="ck">✓</span> Community support</li>
+          <li><span class="ck">✓</span> Basic analytics</li>
+          <li><span class="nx">✕</span> Priority execution</li>
+        </ul>
+        <button class="btn-p" style="width:100%" onclick="showToast('🚀 Signing up for Starter...')">Get Started Free</button>
+      </div>
+      <div class="plan hot">
+        <div class="plan-badge">Most Popular</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price"><sup>$</sup>49<sub>/mo</sub></div>
+        <div class="plan-desc">For growing teams shipping fast</div>
+        <ul class="plan-feats">
+          <li><span class="ck">✓</span> 10,000 tasks / month</li>
+          <li><span class="ck">✓</span> Unlimited integrations</li>
+          <li><span class="ck">✓</span> Priority support 24/7</li>
+          <li><span class="ck">✓</span> Full analytics + replay</li>
+          <li><span class="ck">✓</span> Gaming-native SDK</li>
+        </ul>
+        <button class="btn-p" style="width:100%" onclick="showToast('💎 Starting Pro trial...')">Start Pro Trial</button>
+      </div>
+      <div class="plan">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price" style="font-size:2rem">Custom</div>
+        <div class="plan-desc">For studios and large-scale deployments</div>
+        <ul class="plan-feats">
+          <li><span class="ck">✓</span> Unlimited tasks</li>
+          <li><span class="ck">✓</span> Dedicated VPC infra</li>
+          <li><span class="ck">✓</span> SLA guarantee</li>
+          <li><span class="ck">✓</span> SAML / SSO</li>
+          <li><span class="ck">✓</span> Custom model fine-tuning</li>
+        </ul>
+        <button class="btn-p" style="width:100%" onclick="showToast('📞 Connecting to sales...')">Contact Sales</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TESTIMONIALS ══════════ -->
+<div class="wrap">
+  <div class="sec reveal">
+    <span class="sec-tag">Testimonials</span>
+    <h2>Loved by Builders Everywhere</h2>
+    <div class="testis">
+      <div class="testi">
+        <div class="testi-txt">We cut NPC scripting time by 80% in the first week. QuickAI just gets gaming workflows.</div>
+        <div class="testi-author">
+          <div class="avatar" style="background:rgba(124,92,252,.2);color:var(--a1)">RD</div>
+          <div><div class="testi-name">Riya Desai</div><div class="testi-role">Lead Designer, Silver Moon Studios</div></div>
+        </div>
+      </div>
+      <div class="testi">
+        <div class="testi-txt">The execution trace made it crystal clear what was happening. Trust + speed in one package.</div>
+        <div class="testi-author">
+          <div class="avatar" style="background:rgba(0,229,255,.15);color:var(--a2)">MP</div>
+          <div><div class="testi-name">Marco Pellegrini</div><div class="testi-role">CTO, NovaPlay Entertainment</div></div>
+        </div>
+      </div>
+      <div class="testi">
+        <div class="testi-txt">Integrates with Jira, Discord, Figma seamlessly. Saved us 20 hours a week immediately.</div>
+        <div class="testi-author">
+          <div class="avatar" style="background:rgba(255,60,172,.15);color:var(--a3)">PN</div>
+          <div><div class="testi-name">Priya Nair</div><div class="testi-role">Product Manager, Orbit Interactive</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ CTA BANNER ══════════ -->
+<div class="wrap">
+  <div class="cta-banner reveal">
+    <span class="sec-tag">Ready to ship 10× faster?</span>
+    <h2 style="font-family:var(--fh);font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-.03em;margin:.5rem 0 1rem">Start Using QuickAI Today</h2>
+    <p style="color:var(--muted);max-width:480px;margin:0 auto 2.5rem;line-height:1.7">No credit card needed. Full Pro features free for 14 days. Cancel anytime.</p>
+    <button class="btn-p" style="font-size:1.05rem;padding:1rem 2.8rem" onclick="showToast('🎉 Welcome aboard! Check your email.')">Create Free Account →</button>
+  </div>
+</div>
+
+<!-- ══════════ CONTACT ══════════ -->
+<div class="wrap" id="contact">
+  <div class="sec reveal">
+    <span class="sec-tag">Contact</span>
+    <h2>Talk to the Team</h2>
+    <p class="lead">Have a question or want a custom demo? We respond within 2 hours.</p>
+    <div class="contact-form">
+      <input class="inp" id="f-name" placeholder="Your Name"/>
+      <input class="inp" id="f-email" placeholder="Work Email"/>
+      <input class="inp" id="f-company" placeholder="Company / Studio"/>
+      <select class="inp" id="f-use">
+        <option value="">Primary Use Case</option>
+        <option>Gaming & NPC Logic</option>
+        <option>Content Creation</option>
+        <option>Data Analysis</option>
+        <option>DevOps Automation</option>
+        <option>Customer Support</option>
+        <option>Other</option>
+      </select>
+      <textarea class="inp full" id="f-msg" placeholder="Tell us what you're building..."></textarea>
+      <div class="full">
+        <button class="form-submit" onclick="submitForm()">Send Message ✉️</button>
+        <div class="form-msg" id="f-msg-out"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="foot-brand">QuickAI</div>
+        <p class="foot-tagline">The autonomous AI agent that<br>thinks — and acts — ahead.</p>
+      </div>
+      <div class="foot-col"><h5>Product</h5><ul><li><a href="#">Features</a></li><li><a href="#">Changelog</a></li><li><a href="#">Roadmap</a></li><li><a href="#">Pricing</a></li></ul></div>
+      <div class="foot-col"><h5>Developers</h5><ul><li><a href="#">Documentation</a></li><li><a href="#">API Reference</a></li><li><a href="#">SDK</a></li><li><a href="#">Status</a></li></ul></div>
+      <div class="foot-col"><h5>Company</h5><ul><li><a href="#">About</a></li><li><a href="#">Blog</a></li><li><a href="#">Careers</a></li><li><a href="#">Contact</a></li></ul></div>
+    </div>
+    <div class="foot-bottom"><p>© 2025 QuickAI, Inc. All rights reserved.</p><p>Privacy · Terms · Security</p></div>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════
+     BOT SYSTEM HTML
+════════════════════════════════ -->
+<div id="bot">
+  <div id="bot-bubble"></div>
+  <div id="bot-av">🤖
+    <div id="bot-eyes">
+      <div class="b-eye"><div class="b-pupil" id="bp-l"></div></div>
+      <div class="b-eye"><div class="b-pupil" id="bp-r"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Bot Panel -->
+<div id="bot-panel">
+  <div class="bp-header">
+    <div class="bp-title">⚡ QuickAI Assistant <span style="font-size:.7rem;color:var(--a2);background:rgba(0,229,255,.1);padding:2px 8px;border-radius:99px;margin-left:6px">LIVE</span></div>
+    <button class="bp-close" onclick="togglePanel()">✕</button>
+  </div>
+  <div class="bp-tabs">
+    <button class="bp-tab active" onclick="switchTab('chat',this)">💬 Chat</button>
+    <button class="bp-tab" onclick="switchTab('tasks',this)">⚡ Actions</button>
+    <button class="bp-tab" onclick="switchTab('stats',this)">📊 Stats</button>
+  </div>
+
+  <!-- Chat Tab -->
+  <div class="bp-content" id="tab-chat">
+    <div class="chat-msgs" id="chat-msgs">
+      <div class="chat-msg bot">Hey! I'm QuickAI 🤖 Ask me anything about our product, pricing, or features!</div>
+    </div>
+    <div class="chat-input-row">
+      <input class="chat-input" id="chat-in" placeholder="Ask me anything..." onkeydown="if(event.key==='Enter')sendChat()"/>
+      <button class="chat-send" onclick="sendChat()">→</button>
+    </div>
+  </div>
+
+  <!-- Tasks Tab -->
+  <div class="bp-content" id="tab-tasks" style="display:none">
+    <div class="task-list">
+      <div class="task-item" onclick="runTask('demo')">
+        <span class="task-icon">⚡</span>
+        <div class="task-info"><div class="task-name">Run Live Demo</div><div class="task-desc">Auto-fill & execute the playground</div></div>
+        <button class="task-run">Run</button>
+      </div>
+      <div class="task-item" onclick="runTask('scroll-features')">
+        <span class="task-icon">🧠</span>
+        <div class="task-info"><div class="task-name">Show Features</div><div class="task-desc">Scroll to features section</div></div>
+        <button class="task-run">Go</button>
+      </div>
+      <div class="task-item" onclick="runTask('scroll-pricing')">
+        <span class="task-icon">💎</span>
+        <div class="task-info"><div class="task-name">View Pricing</div><div class="task-desc">Jump to pricing plans</div></div>
+        <button class="task-run">Go</button>
+      </div>
+      <div class="task-item" onclick="runTask('fill-form')">
+        <span class="task-icon">✉️</span>
+        <div class="task-info"><div class="task-name">Fill Contact Form</div><div class="task-desc">Auto-fill the contact form for you</div></div>
+        <button class="task-run">Fill</button>
+      </div>
+      <div class="task-item" onclick="runTask('party')">
+        <span class="task-icon">🎉</span>
+        <div class="task-info"><div class="task-name">Party Mode</div><div class="task-desc">Activate celebration mode!</div></div>
+        <button class="task-run">Go!</button>
+      </div>
+      <div class="task-item" onclick="runTask('theme')">
+        <span class="task-icon">🎨</span>
+        <div class="task-info"><div class="task-name">Change Theme</div><div class="task-desc">Cycle cursor & accent colors</div></div>
+        <button class="task-run">Switch</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Tab -->
+  <div class="bp-content" id="tab-stats" style="display:none">
+    <div class="mini-stats">
+      <div class="mini-stat"><div class="mini-stat-n" id="ms-clicks">0</div><div class="mini-stat-l">Clicks</div></div>
+      <div class="mini-stat"><div class="mini-stat-n" id="ms-moves">0</div><div class="mini-stat-l">Moves (×100)</div></div>
+      <div class="mini-stat"><div class="mini-stat-n" id="ms-time">0s</div><div class="mini-stat-l">Time on page</div></div>
+      <div class="mini-stat"><div class="mini-stat-n" id="ms-tasks">0</div><div class="mini-stat-l">Tasks run</div></div>
+    </div>
+    <p style="font-size:.75rem;color:var(--muted);margin-top:1rem">Your activity this session:</p>
+    <div class="activity-bar" id="act-bar"></div>
+  </div>
+</div>
+
+<!-- Radial Menu -->
+<div id="rad-menu">
+  <div class="rad-ring">
+    <div class="rad-center" id="rad-close">✕</div>
+    <div class="rad-item" id="ri0"><span class="ri">⚡</span><span class="rl">Demo</span></div>
+    <div class="rad-item" id="ri1"><span class="ri">🧠</span><span class="rl">Features</span></div>
+    <div class="rad-item" id="ri2"><span class="ri">💎</span><span class="rl">Pricing</span></div>
+    <div class="rad-item" id="ri3"><span class="ri">🎉</span><span class="rl">Party</span></div>
+    <div class="rad-item" id="ri4"><span class="ri">✉️</span><span class="rl">Contact</span></div>
+    <div class="rad-item" id="ri5"><span class="ri">📊</span><span class="rl">Stats</span></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+//  CURSOR
+// ═══════════════════════════════════════
+const cRing=document.getElementById('c-ring');
+const cDot=document.getElementById('c-dot');
+let mx=window.innerWidth/2,my=window.innerHeight/2,rx=mx,ry=my;
+let clickCount=0,moveCount=0,taskCount=0,startTime=Date.now();
+
+const trail=document.getElementById('c-trail');
+trail.width=window.innerWidth; trail.height=window.innerHeight;
+trail.style.cssText='position:fixed;top:0;left:0;pointer-events:none;z-index:99998';
+const ctx=trail.getContext('2d');
+const pts=[];
+
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX; my=e.clientY;
+  cDot.style.left=mx+'px'; cDot.style.top=my+'px';
+  pts.push({x:mx,y:my,l:1});
+  if(pts.length>35)pts.shift();
+  moveCount++;
+  if(moveCount%100===0)updateStats();
+  trackEyes(mx,my);
+  resetIdle();
+},{passive:true});
+
+(function animRing(){
+  rx+=(mx-rx)*.13; ry+=(my-ry)*.13;
+  cRing.style.left=rx+'px'; cRing.style.top=ry+'px';
+  requestAnimationFrame(animRing);
+})();
+
+(function drawTrail(){
+  ctx.clearRect(0,0,trail.width,trail.height);
+  for(let i=1;i<pts.length;i++){
+    pts[i].l-=0.035;
+    if(pts[i].l<=0)continue;
+    ctx.beginPath();
+    ctx.moveTo(pts[i-1].x,pts[i-1].y);
+    ctx.lineTo(pts[i].x,pts[i].y);
+    ctx.strokeStyle=`rgba(${curCol},${pts[i].l*.5})`;
+    ctx.lineWidth=pts[i].l*3.5;
+    ctx.lineCap='round'; ctx.stroke();
+  }
+  requestAnimationFrame(drawTrail);
+})();
+
+window.addEventListener('resize',()=>{trail.width=window.innerWidth;trail.height=window.innerHeight});
+
+document.addEventListener('click',e=>{
+  if(radOpen&&!e.target.closest('#rad-menu')){closeRad();return;}
+  clickCount++; updateStats();
+  ripple(e.clientX,e.clientY);
+  if(Math.random()<.38)spawnSparkle(e.clientX,e.clientY);
+  cRing.style.width='62px'; cRing.style.height='62px';
+  cRing.style.borderColor='rgba(0,229,255,.9)';
+  cRing.style.background='rgba(0,229,255,.07)';
+  setTimeout(()=>{
+    cRing.style.width='38px'; cRing.style.height='38px';
+    cRing.style.borderColor=`rgba(${curCol},.72)`;
+    cRing.style.background='';
+  },280);
+});
+
+// ═══════════════════════════════════════
+//  THEME / COLOR
+// ═══════════════════════════════════════
+let themeIdx=0;
+let curCol='124,92,252';
+const themes=[
+  {col:'124,92,252',a1:'#7c5cfc',a2:'#00e5ff',label:'Neon Purple'},
+  {col:'255,107,53',a1:'#ff6b35',a2:'#ffd700',label:'Sunset Fire'},
+  {col:'0,229,255',a1:'#00e5ff',a2:'#7c5cfc',label:'Cyber Cyan'},
+  {col:'255,60,172',a1:'#ff3cac',a2:'#ff6b35',label:'Sakura Pink'},
+];
+function cycleTheme(){
+  themeIdx=(themeIdx+1)%themes.length;
+  const t=themes[themeIdx];
+  curCol=t.col;
+  cDot.style.background=t.a1; cDot.style.boxShadow='0 0 12px '+t.a1;
+  cRing.style.borderColor=`rgba(${t.col},.72)`;
+  burst(mx,my,[t.a1,t.a2,'#ffffff']);
+  showBubble('🎨 Theme: '+t.label+' ✨');
+  showToast('🎨 Switched to '+t.label+' theme');
+}
+
+// ═══════════════════════════════════════
+//  EYES
+// ═══════════════════════════════════════
+let excited=false;
+function trackEyes(cx,cy){
+  const av=document.getElementById('bot-av');
+  const r=av.getBoundingClientRect();
+  const ax=r.left+r.width/2,ay=r.top+r.height/2;
+  [{el:document.getElementById('bp-l'),ox:-3.5},{el:document.getElementById('bp-r'),ox:3.5}].forEach(({el,ox})=>{
+    if(!el)return;
+    const dx=cx-(ax+ox*5),dy=cy-ay,d=Math.sqrt(dx*dx+dy*dy)||1,m=Math.min(3.5,d);
+    el.style.transform=`translate(${dx/d*m}px,${dy/d*m}px)`;
+  });
+  const dist=Math.sqrt((cx-ax)**2+(cy-ay)**2);
+  if(dist<100&&!excited){
+    excited=true;
+    const a=document.getElementById('bot-av');
+    a.classList.add('excited');
+    showBubble(greets[Math.floor(Math.random()*greets.length)]);
+    setTimeout(()=>{a.classList.remove('excited');excited=false;},600);
+  }
+}
+
+// ═══════════════════════════════════════
+//  BUBBLE
+// ═══════════════════════════════════════
+const greets=["Whoa, you found me! 👀","Need help? Click me! 🖱️","I run on ⚡ energy!","Let's build something 🚀","Psst… try Party mode! 🎉","99.2% task success rate 💪"];
+const idles=["Still there? 👀 I see you...","Idle detected ⏱️ Click me!","Go ahead, right-click!","Bored? Try the actions tab!","I can fill your contact form ✉️"];
+let bTimer=null,idleTimer=null;
+
+function showBubble(msg,dur=3500){
+  const b=document.getElementById('bot-bubble');
+  clearTimeout(bTimer);
+  b.className='show'; b.textContent=msg;
+  bTimer=setTimeout(()=>{b.className='';},dur);
+}
+
+function typingBubble(finalMsg){
+  const b=document.getElementById('bot-bubble');
+  clearTimeout(bTimer);
+  b.className='show typing'; b.textContent='';
+  setTimeout(()=>{
+    b.className='show'; b.textContent=finalMsg;
+    bTimer=setTimeout(()=>{b.className='';},4000);
+  },1100);
+}
+
+function resetIdle(){
+  clearTimeout(idleTimer);
+  idleTimer=setTimeout(()=>{
+    if(!panelOpen)showBubble(idles[Math.floor(Math.random()*idles.length)]);
+  },5000);
+}
+
+// ═══════════════════════════════════════
+//  BOT PANEL
+// ═══════════════════════════════════════
+let panelOpen=false;
+function togglePanel(){
+  panelOpen=!panelOpen;
+  document.getElementById('bot-panel').classList.toggle('open',panelOpen);
+  if(panelOpen){
+    showBubble('');
+    document.getElementById('bot-av').classList.add('excited');
+    setTimeout(()=>document.getElementById('bot-av').classList.remove('excited'),600);
+  }
+}
+document.getElementById('bot-av').addEventListener('click',e=>{
+  e.stopPropagation();
+  togglePanel();
+});
+
+function switchTab(name,btn){
+  document.querySelectorAll('.bp-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  ['chat','tasks','stats'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display=t===name?'block':'none';
+  });
+  if(name==='stats')updateStats();
+}
+
+// ═══════════════════════════════════════
+//  CHAT
+// ═══════════════════════════════════════
+const chatKB={
+  'price|pricing|cost|plan|free':()=>'We have 3 plans: Starter (free), Pro ($49/mo), and Enterprise (custom). All plans start with a 14-day Pro trial! 💎',
+  'feature|what can|do you|capability':()=>'QuickAI has autonomous reasoning, real-time execution, 100+ integrations, gaming-native SDK (Unity, Unreal, Roblox), and enterprise security. Want to know more about any specific feature? 🧠',
+  'gaming|game|npc|unity|unreal|roblox':()=>'Great news! QuickAI has deep gaming integrations with Unity, Unreal Engine, Roblox, and Discord. Perfect for NPC logic, procedural storytelling, and live game events! 🎮',
+  'security|safe|data|privacy|soc':()=>'QuickAI is SOC-2 Type II certified. Your data never leaves your VPC. We offer fine-grained RBAC, full audit logs, and zero-retention mode for sensitive workloads. 🛡️',
+  'hello|hi|hey|sup|howdy':()=>'Hey there! 👋 I\'m QuickAI\'s assistant. I can answer questions, run demos, fill forms, and more. What can I help you with?',
+  'demo|try|test|playground':()=>'Try our live playground above! Just type any task and watch me execute it in real time. Or click "⚡ Actions" tab and I\'ll auto-run a demo for you! ⚡',
+  'contact|talk|human|team':()=>'Scroll down to the contact form — or I can fill it for you! Our team responds within 2 hours. Want me to fill the form? 📬',
+  'silver moon|silvermoon':()=>'Silver Moon Studios is one of our favorite customers! They cut NPC scripting time by 80% in just the first week. Amazing team! 🌙✨',
+  'party|celebrate|fun':()=>'🎉 You want a party?! Click the Actions tab and hit Party Mode — I promise it\'s worth it!',
+};
+
+function sendChat(){
+  const inp=document.getElementById('chat-in');
+  const msg=inp.value.trim(); if(!msg)return;
+  addChatMsg(msg,'user'); inp.value='';
+  document.getElementById('bot-av').classList.add('thinking');
+  setTimeout(()=>{
+    document.getElementById('bot-av').classList.remove('thinking');
+    const reply=getBotReply(msg);
+    addChatMsg(reply,'bot');
+  },900+Math.random()*600);
+}
+
+function getBotReply(msg){
+  const m=msg.toLowerCase();
+  for(const [keys,fn] of Object.entries(chatKB)){
+    if(keys.split('|').some(k=>m.includes(k)))return fn();
+  }
+  return "Interesting question! I'm still learning, but I'd suggest checking our docs or contacting the team. Anything else I can help with? 🤖";
+}
+
+function addChatMsg(text,who){
+  const d=document.createElement('div');
+  d.className='chat-msg '+who; d.textContent=text;
+  const msgs=document.getElementById('chat-msgs');
+  msgs.appendChild(d);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+// ═══════════════════════════════════════
+//  TASKS / ACTIONS
+// ═══════════════════════════════════════
+function runTask(type){
+  taskCount++;
+  switch(type){
+    case 'demo':
+      if(!panelOpen)togglePanel();
+      document.getElementById('pg-inp').value='Generate a weekly report from Notion and post to Slack';
+      document.getElementById('features').scrollIntoView({behavior:'smooth'});
+      setTimeout(()=>document.getElementById('demo').scrollIntoView({behavior:'smooth'}),400);
+      setTimeout(()=>runDemo(),900);
+      typingBubble('⚡ Auto-running the demo for you!');
+      break;
+    case 'scroll-features':
+      document.getElementById('features').scrollIntoView({behavior:'smooth'});
+      showBubble('🧠 Check out our 6 core features!');
+      showToast('📜 Scrolling to Features...');
+      break;
+    case 'scroll-pricing':
+      document.getElementById('pricing').scrollIntoView({behavior:'smooth'});
+      showBubble('💎 Pro plan is the best value!');
+      showToast('💎 Scrolling to Pricing...');
+      break;
+    case 'fill-form':
+      document.getElementById('contact').scrollIntoView({behavior:'smooth'});
+      setTimeout(()=>{
+        document.getElementById('f-name').value='Jamie Chen';
+        document.getElementById('f-email').value='jamie@silvermoon.studio';
+        document.getElementById('f-company').value='Silver Moon Studios';
+        document.getElementById('f-use').value='Gaming & NPC Logic';
+        document.getElementById('f-msg').value='Hi! We are a gaming studio looking to integrate QuickAI for our NPC scripting pipeline. Would love a demo!';
+        showBubble('✉️ Form filled! Just click Send.');
+        showToast('✅ Contact form auto-filled!');
+        burst(window.innerWidth/2,window.innerHeight/2);
+      },800);
+      break;
+    case 'party':
+      partyMode();
+      break;
+    case 'theme':
+      cycleTheme();
+      break;
+  }
+}
+
+// ═══════════════════════════════════════
+//  RADIAL MENU (right-click)
+// ═══════════════════════════════════════
+let radOpen=false;
+document.addEventListener('contextmenu',e=>{
+  e.preventDefault(); openRad(e.clientX,e.clientY);
+});
+function openRad(x,y){
+  const m=document.getElementById('rad-menu');
+  m.style.left=x+'px'; m.style.top=y+'px';
+  m.classList.add('open'); radOpen=true;
+  const items=m.querySelectorAll('.rad-item'),r=92;
+  items.forEach((item,i)=>{
+    const a=(i/items.length)*Math.PI*2-Math.PI/2;
+    item.style.left=(Math.cos(a)*r+110)+'px';
+    item.style.top=(Math.sin(a)*r+110)+'px';
+    item.style.transitionDelay=(i*.055)+'s';
+  });
+  ripple(x,y);
+  showBubble('Pick a quick action! 🎯');
+}
+function closeRad(){
+  document.getElementById('rad-menu').classList.remove('open');
+  radOpen=false;
+}
+document.getElementById('rad-close').addEventListener('click',closeRad);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeRad();if(panelOpen)togglePanel();}});
+
+document.getElementById('ri0').addEventListener('click',()=>{closeRad();runTask('demo')});
+document.getElementById('ri1').addEventListener('click',()=>{closeRad();runTask('scroll-features')});
+document.getElementById('ri2').addEventListener('click',()=>{closeRad();runTask('scroll-pricing')});
+document.getElementById('ri3').addEventListener('click',()=>{closeRad();runTask('party')});
+document.getElementById('ri4').addEventListener('click',()=>{closeRad();runTask('fill-form')});
+document.getElementById('ri5').addEventListener('click',()=>{
+  closeRad();
+  if(!panelOpen)togglePanel();
+  setTimeout(()=>{
+    const t=document.querySelector('[onclick="switchTab(\'stats\',this)"]');
+    if(t)switchTab('stats',t);
+  },350);
+});
+
+// ═══════════════════════════════════════
+//  PLAYGROUND DEMO
+// ═══════════════════════════════════════
+const demoSteps=[
+  {msg:'🔍 Parsing intent & extracting entities...',col:'log-run',pct:14},
+  {msg:'🗂️  Selecting tools: Search, Write, Notify',col:'log-run',pct:28},
+  {msg:'✅ Tools loaded — connecting to workspace',col:'log-ok',pct:42},
+  {msg:'⚙️  Step 1/4: Fetching data sources...',col:'log-run',pct:55},
+  {msg:'⚙️  Step 2/4: Processing & summarising...',col:'log-run',pct:68},
+  {msg:'⚙️  Step 3/4: Formatting output...',col:'log-run',pct:80},
+  {msg:'⚙️  Step 4/4: Sending to destination...',col:'log-run',pct:92},
+  {msg:'🎉 Task complete in 3.4s — all steps passed!',col:'log-done',pct:100},
+];
+let demoRunning=false;
+async function runDemo(){
+  if(demoRunning)return;
+  const inp=document.getElementById('pg-inp').value.trim();
+  if(!inp){showToast('⚠️ Please enter a task first!');return;}
+  demoRunning=true;
+  taskCount++;
+  const log=document.getElementById('pg-log');
+  const bar=document.getElementById('pg-bar');
+  log.innerHTML='';
+  showBubble('⚡ Running your task now! Watch the log 👇');
+  document.getElementById('bot-av').classList.add('thinking');
+  for(const step of demoSteps){
+    await sleep(380+Math.random()*200);
+    bar.style.width=step.pct+'%';
+    const line=document.createElement('div');
+    line.className='log-line '+step.col;
+    const ts=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    line.textContent=`[${ts}]  ${step.msg}`;
+    log.appendChild(line);
+    setTimeout(()=>line.classList.add('show'),20);
+    log.scrollTop=log.scrollHeight;
+  }
+  document.getElementById('bot-av').classList.remove('thinking');
+  showBubble('✅ Done! Task completed in 3.4 seconds 🚀');
+  burst(window.innerWidth/2,400);
+  demoRunning=false;
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+// ═══════════════════════════════════════
+//  FORM SUBMIT
+// ═══════════════════════════════════════
+function submitForm(){
+  const n=document.getElementById('f-name').value.trim();
+  const e=document.getElementById('f-email').value.trim();
+  const m=document.getElementById('f-msg').value.trim();
+  const out=document.getElementById('f-msg-out');
+  if(!n||!e||!m){
+    out.style.display='block'; out.className='form-msg err';
+    out.textContent='⚠️ Please fill in your name, email, and message.'; return;
+  }
+  out.style.display='block'; out.className='form-msg ok';
+  out.textContent=`🎉 Thanks ${n}! We'll reach out to ${e} within 2 hours.`;
+  showBubble(`✉️ Message sent, ${n}! We'll be in touch soon 🚀`);
+  burst(window.innerWidth/2,window.innerHeight/2);
+}
+
+// ═══════════════════════════════════════
+//  PARTY MODE
+// ═══════════════════════════════════════
+function partyMode(){
+  const cols=['#7c5cfc','#00e5ff','#ff3cac','#ffd700','#00ff88','#ff6b35'];
+  let n=0;
+  const iv=setInterval(()=>{
+    burst(Math.random()*window.innerWidth,Math.random()*window.innerHeight,cols);
+    spawnSparkle(Math.random()*window.innerWidth,Math.random()*window.innerHeight);
+    if(++n>16)clearInterval(iv);
+  },100);
+  showToast('🎉 PARTY TIME at Silver Moon Studios!! 🌙✨',3500);
+  showBubble('🎉🎉🎉 PARTY MODE ACTIVATED!!!');
+  taskCount++;
+}
+
+// ═══════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════
+function updateStats(){
+  document.getElementById('ms-clicks').textContent=clickCount;
+  document.getElementById('ms-moves').textContent=Math.floor(moveCount/100);
+  const sec=Math.floor((Date.now()-startTime)/1000);
+  document.getElementById('ms-time').textContent=sec>60?Math.floor(sec/60)+'m '+sec%60+'s':sec+'s';
+  document.getElementById('ms-tasks').textContent=taskCount;
+  // activity bars
+  const bar=document.getElementById('act-bar');
+  if(bar.children.length===0){
+    for(let i=0;i<16;i++){
+      const b=document.createElement('div');
+      b.className='ab'; b.style.height=Math.floor(15+Math.random()*85)+'%';
+      bar.appendChild(b);
+    }
+  }
+}
+setInterval(updateStats,1000);
+
+// ═══════════════════════════════════════
+//  FX
+// ═══════════════════════════════════════
+function ripple(x,y){
+  const d=document.createElement('div');
+  d.className='ripple'; d.style.left=x+'px'; d.style.top=y+'px';
+  d.style.width='100px'; d.style.height='100px';
+  document.body.appendChild(d); setTimeout(()=>d.remove(),700);
+}
+const sparks=['✨','⚡','💫','🌟','✦','◆'];
+function spawnSparkle(x,y){
+  const s=document.createElement('div');
+  s.className='spk'; s.textContent=sparks[Math.floor(Math.random()*sparks.length)];
+  s.style.left=x+'px'; s.style.top=y+'px';
+  document.body.appendChild(s); setTimeout(()=>s.remove(),1200);
+}
+function burst(x,y,cols=['#7c5cfc','#00e5ff','#ff3cac','#ffd700']){
+  for(let i=0;i<18;i++){
+    const p=document.createElement('div'); p.className='ptc';
+    const a=(i/18)*Math.PI*2,d=55+Math.random()*75;
+    p.style.setProperty('--dx',Math.cos(a)*d+'px');
+    p.style.setProperty('--dy',Math.sin(a)*d+'px');
+    p.style.left=x+'px'; p.style.top=y+'px';
+    p.style.background=cols[i%cols.length];
+    const sz=3+Math.random()*6; p.style.width=sz+'px'; p.style.height=sz+'px';
+    document.body.appendChild(p); setTimeout(()=>p.remove(),900);
+  }
+}
+
+// ═══════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════
+let tTimer=null;
+function showToast(msg,dur=2800){
+  const t=document.getElementById('toast');
+  clearTimeout(tTimer); t.textContent=msg; t.classList.add('show');
+  tTimer=setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+// ═══════════════════════════════════════
+//  SCROLL REVEAL + COUNTER
+// ═══════════════════════════════════════
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+      e.target.querySelectorAll('[data-count]').forEach(el=>{
+        const target=+el.dataset.count;
+        let cur=0; const step=target/60;
+        const iv=setInterval(()=>{
+          cur=Math.min(cur+step,target);
+          el.textContent=target>=1000000
+            ?(cur/1000000).toFixed(1)+'M+'
+            :target>=1000?Math.round(cur).toLocaleString()
+            :Math.round(cur)+(target===99?'.2%':'+')||Math.round(cur);
+          if(cur>=target)clearInterval(iv);
+        },25);
+      });
+    }
+  });
+},{threshold:.15});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+setTimeout(()=>showBubble("Hey! I'm QuickAI ⚡ Click me to chat!",4500),1200);
+setTimeout(()=>showBubble("Try right-clicking anywhere for a quick menu 🎯",3800),9000);
+setTimeout(()=>showBubble("I can fill your contact form automatically ✉️",3800),18000);
+resetIdle();
+</script>
+</body>
+</html>
